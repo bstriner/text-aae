@@ -61,12 +61,12 @@ def default_params():
         dis_lr=3e-4,
 
         # Network
-        encoder_dim=256,
-        decoder_dim=256,
+        encoder_dim=512,
+        decoder_dim=512,
         latent_dim=128,
-        discriminator_dim=256,
+        discriminator_dim=512,
         feature_dim=128,
         lr=3e-4,
-        sm_weight=1.,
+        sm_weight=5.,
         gan_weight=1.
     )

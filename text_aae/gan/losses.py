@@ -9,3 +9,12 @@ def fm_losses(y_real, y_fake):
     gloss = dist
     dloss = -dist
     return gloss, dloss
+
+
+def gan_losses(y_real, y_fake):
+    assert len(y_real.shape) == 2
+    ey_real = tf.reduce_mean(y_real)
+    ey_fake = tf.reduce_mean(y_fake)
+    dloss = ey_fake - ey_real
+    gloss = ey_real - ey_fake
+    return gloss, dloss

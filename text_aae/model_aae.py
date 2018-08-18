@@ -3,10 +3,10 @@ from tensorflow.contrib.gan.python.train import RunTrainOpsHook
 
 from .callbacks.autoencode import AutoencodeCallback
 from .callbacks.generate import GenerateCallback
-from .decoder import Decoder
-from .discriminator import Discriminator
-from .encoder import Encoder
-from .gan.losses import fm_losses
+from text_aae.networks.decoder import Decoder
+from text_aae.networks.discriminator import Discriminator
+from text_aae.networks.encoder import Encoder
+from .gan.losses import gan_losses
 from .gan.train import discriminator_train_op, generator_train_op
 
 
@@ -35,10 +35,10 @@ def make_model_aae_fn(charset):
             n = x.shape[1].value
             y_real = all_y[:n, :]
             y_fake = all_y[n:, :]
-            # y_real = dis.call(z_prior, is_training=is_training)
-            # y_fake = dis.call(z, is_training=is_training)
+            #y_real = dis.call(z_prior, is_training=is_training)
+            #y_fake = dis.call(z, is_training=is_training)
 
-        gloss, dloss = fm_losses(y_real=y_real, y_fake=y_fake)
+        gloss, dloss = gan_losses(y_real=y_real, y_fake=y_fake)
 
         pred = tf.argmax(logits, axis=-1)
         onehot = tf.one_hot(x, axis=-1, depth=vocab_size)

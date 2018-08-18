@@ -68,5 +68,5 @@ def default_params():
         feature_dim=128,
         lr=3e-4,
         sm_weight=1.,
-        gan_weight=10.
+        gan_weight=1.
     )

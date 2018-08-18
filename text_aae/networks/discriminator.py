@@ -1,7 +1,7 @@
 import tensorflow as tf
 
-from .sn.sn_linear import SNLinear
-from .sn.sn_lstm import SNLSTMCell
+from text_aae.sn.sn_linear import SNLinear
+from text_aae.sn.sn_lstm import SNLSTMCell
 from tensorflow.python.ops.rnn_cell import LSTMCell
 
 
@@ -30,7 +30,7 @@ class Discriminator(object):
                 name='discriminator_lstm_3_bw')
         ]
         self.projection = SNLinear(
-            num_units=params.feature_dim
+            num_units=1 #params.feature_dim
         )
 
     def call(self, z, is_training=True):
@@ -48,7 +48,7 @@ class Discriminator(object):
             print("hfw hbw: {}, {}".format(hfw, hbw))
             h = tf.concat((hfw, hbw), axis=-1, name='fw_bw_concat_{}'.format(i))
 
-        h = self.projection(h)
         h = tf.reduce_mean(h, axis=0)
+        h = self.projection(h)
         y = h
         return y

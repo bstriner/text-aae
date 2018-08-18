@@ -9,7 +9,7 @@ def generator_train_op(params, scope, loss):
     updates = tf.get_collection(tf.GraphKeys.UPDATE_OPS, scope=scope.name)
     print("Gen updates: {}".format(updates))
     print("Gen parameters: {}".format(parameters))
-    optimizer = GradientDescentOptimizer(learning_rate=params.gen_lr, name='GeneratorOpt')
+    optimizer = AdamOptimizer(learning_rate=params.gen_lr, name='GeneratorOpt')
 
     tf.summary.scalar('generator_loss', loss)
 
@@ -28,7 +28,7 @@ def discriminator_train_op(params, scope, loss):
     updates = tf.get_collection(tf.GraphKeys.UPDATE_OPS, scope=scope.name)
     print("Dis updates: {}".format(updates))
     print("Dis parameters: {}".format(parameters))
-    optimizer = GradientDescentOptimizer(learning_rate=params.dis_lr, name='DiscriminatorOpt')
+    optimizer = AdamOptimizer(learning_rate=params.dis_lr, name='DiscriminatorOpt')
 
     tf.summary.scalar('discriminator_loss', loss)
 

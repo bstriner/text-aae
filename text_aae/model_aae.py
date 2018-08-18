@@ -53,6 +53,7 @@ def make_model_aae_fn(charset):
             tf.losses.add_loss(sm_loss)
             tf.losses.add_loss(gloss)
             gen_loss = gloss + sm_loss
+            #gen_loss = sm_loss
             gen_logits = dec.call(z_prior)
             gen_text = tf.argmax(gen_logits, axis=-1)
 

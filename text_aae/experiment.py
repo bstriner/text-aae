@@ -14,7 +14,7 @@ def make_experiment_fn(config: TextConfig):
             batch_size=tf.flags.FLAGS.batch_size
         )
         estimator = Estimator(
-            model_fn=config.make_model_fn(charset),
+            model_fn=config.make_model_fn(charset, config),
             config=run_config,
             params=hparams)
         experiment = Experiment(

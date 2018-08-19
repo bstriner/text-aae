@@ -2,8 +2,8 @@ import tensorflow as tf
 from tensorflow.contrib import slim
 
 from .callbacks.autoencode import AutoencodeCallback
-from text_aae.networks.decoder import Decoder
-from text_aae.networks.encoder import Encoder
+from text_aae.networks.rnn.decoder import Decoder
+from text_aae.networks.rnn.encoder import Encoder
 
 
 def make_model_ae_fn(charset):

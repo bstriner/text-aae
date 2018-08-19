@@ -18,3 +18,22 @@ def gan_losses(y_real, y_fake):
     dloss = ey_fake - ey_real
     gloss = ey_real - ey_fake
     return gloss, dloss
+
+def sign_sq(x):
+    return tf.square(x)*tf.sign(x)
+
+def gan_losses_sq(y_real, y_fake):
+    assert len(y_real.shape) == 2
+    ey_real = tf.reduce_mean(y_real)
+    ey_fake = tf.reduce_mean(y_fake)
+    dloss = sign_sq(ey_fake - ey_real)
+    gloss = sign_sq(ey_real - ey_fake)
+    return gloss, dloss
+
+def gan_losses_h(y_real, y_fake):
+    assert len(y_real.shape) == 2
+    ey_real = tf.reduce_mean(y_real)
+    ey_fake = tf.reduce_mean(y_fake)
+    dloss = ey_fake - ey_real
+    gloss = tf.square(ey_real - ey_fake)
+    return gloss, dloss

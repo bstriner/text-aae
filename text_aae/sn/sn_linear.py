@@ -37,8 +37,3 @@ class SNLinear(Layer):
             h = tf.matmul(h, self.kernel)
         h = h + self.bias
         return h
-
-
-from tensorflow.contrib import slim
-
-slim.fully_connected

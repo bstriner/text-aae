@@ -56,9 +56,9 @@ def get_hparams(model_dir, create):
 def default_params():
     return HParams(
         generator_steps=1,
-        discriminator_steps=7,
-        gen_lr=3e-4,
-        dis_lr=3e-4,
+        discriminator_steps=5,
+        gen_lr=1e-5,
+        dis_lr=1e-5,
 
         # Network
         encoder_dim=512,
@@ -66,7 +66,8 @@ def default_params():
         latent_dim=128,
         discriminator_dim=512,
         feature_dim=128,
-        lr=3e-4,
-        sm_weight=5.,
+        lr=1e-4,
+        momentum=0.1,
+        sm_weight=1.,
         gan_weight=1.
     )

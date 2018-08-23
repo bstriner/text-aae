@@ -1,5 +1,9 @@
 class TextConfig(object):
     def __init__(
             self,
-            make_model_fn):
-        self.make_model_fn = make_model_fn
+            model_fn,
+            input_fns,
+            mode='rnn'):
+        self.model_fn = model_fn
+        self.input_fns = input_fns
+        self.mode = mode

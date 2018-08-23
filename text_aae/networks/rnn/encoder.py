@@ -39,6 +39,7 @@ class Encoder(object):
         print("H: {}".format(h))
         mu = fully_connected(h, self.latent_dim, activation_fn=None, scope='mu')
         logsigma = fully_connected(h, self.latent_dim, activation_fn=None, scope='logsigma')
+        sigma = tf.nn.softplus(logsigma)
         rnd = tf.random_normal(shape=tf.shape(logsigma))
-        z = mu + (rnd * tf.exp(logsigma))
+        z = tf.add(mu , rnd * sigma, 'z')
         return z

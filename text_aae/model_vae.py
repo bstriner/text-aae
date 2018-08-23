@@ -1,30 +1,39 @@
 import tensorflow as tf
 from tensorflow.contrib import slim
 
-from text_aae.networks.rnn.decoder import Decoder
-from text_aae.networks.rnn.encoder import Encoder
 from .callbacks.autoencode import AutoencodeCallback
-from .text_config import TextConfig
+from .callbacks.generate import GenerateCallback
+from .rnd import kl_divergence, sample, softplus_rect
 
 
-def make_model_ae_fn(
+def make_model_vae_fn(
         charset,
         encoder_fn,
         decoder_fn,
         model_mode='rnn'):
     vocab_size = len(charset)
 
-    def model_ae_fn(features, labels, mode, params):
+    def model_vae_fn(features, labels, mode, params):
         # Build the generator and discriminator.
         is_training = mode == tf.estimator.ModeKeys.TRAIN
         x = features['x']
-        if model_mode=='rnn':
+        if model_mode == 'rnn':
             x = tf.transpose(x, (1, 0))
 
-        z = encoder_fn(x, vocab_size=vocab_size, params=params, is_training=is_training)
-        logits = decoder_fn(z, vocab_size=vocab_size, params=params, is_training=is_training)
+        with tf.variable_scope('Encoder'):
+            z_mu, z_logsigma = encoder_fn(x, vocab_size=vocab_size, params=params, is_training=is_training)
+            z_sigma = softplus_rect(z_logsigma)
+            z = sample(z_mu, z_sigma)
+            kl = kl_divergence(z_mu, z_sigma)
+        with tf.variable_scope('Decoder') as dec_scope:
+            logits = decoder_fn(z, vocab_size=vocab_size, params=params, is_training=is_training)
+            pred = tf.argmax(logits, axis=-1)
 
-        pred = tf.argmax(logits, axis=-1)
+        with tf.variable_scope(dec_scope, reuse=True):
+            prior_z = tf.random_normal(shape=tf.shape(z))
+            gen_logits = decoder_fn(prior_z, vocab_size=vocab_size, params=params, is_training=is_training)
+            gen_pred = tf.argmax(gen_logits, axis=-1)
+
         onehot = tf.one_hot(x, axis=-1, depth=vocab_size)
         print("test: {},{}".format(x, logits))
 
@@ -32,7 +41,10 @@ def make_model_ae_fn(
             labels=onehot,
             logits=logits
         )
+
         tf.losses.add_loss(tf.reduce_mean(sm_losses))
+        tf.losses.add_loss(tf.reduce_mean(kl))
+
         total_loss = tf.losses.get_total_loss()
 
         if mode == tf.estimator.ModeKeys.TRAIN:
@@ -53,6 +65,12 @@ def make_model_ae_fn(
                 charset=charset,
                 model_mode=model_mode
             )
+            generate_cb = GenerateCallback(
+                step=tf.train.get_or_create_global_step(),
+                gen_text=gen_pred,
+                charset=charset,
+                model_mode=model_mode
+            )
             eval_metric_ops = {
                 'val_accuracy': tf.metrics.accuracy(labels=x, predictions=pred)
             }
@@ -60,6 +78,6 @@ def make_model_ae_fn(
                 mode=mode,
                 loss=total_loss,
                 eval_metric_ops=eval_metric_ops,
-                evaluation_hooks=[autoencode_cb])
+                evaluation_hooks=[autoencode_cb, generate_cb])
 
-    return model_ae_fn
+    return model_vae_fn

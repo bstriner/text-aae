@@ -69,5 +69,7 @@ def default_params():
         lr=1e-4,
         momentum=0.1,
         sm_weight=1.,
-        gan_weight=1.
+        gan_weight=3.,
+        anneal_rate=1000,
+        anneal_offset=4,
     )

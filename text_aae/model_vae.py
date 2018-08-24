@@ -24,7 +24,7 @@ def make_model_vae_fn(
             z_mu, z_logsigma = encoder_fn(x, vocab_size=vocab_size, params=params, is_training=is_training)
             z_sigma = softplus_rect(z_logsigma)
             z = sample(z_mu, z_sigma)
-            kl = kl_divergence(z_mu, z_sigma)
+            kl_losses = kl_divergence(z_mu, z_sigma)
         with tf.variable_scope('Decoder') as dec_scope:
             logits = decoder_fn(z, vocab_size=vocab_size, params=params, is_training=is_training)
             pred = tf.argmax(logits, axis=-1)
@@ -37,19 +37,32 @@ def make_model_vae_fn(
         onehot = tf.one_hot(x, axis=-1, depth=vocab_size)
         print("test: {},{}".format(x, logits))
 
-        sm_losses = tf.nn.softmax_cross_entropy_with_logits_v2(
-            labels=onehot,
-            logits=logits
-        )
+        with tf.name_scope("Losses"):
+            sm_losses = tf.nn.softmax_cross_entropy_with_logits_v2(
+                labels=onehot,
+                logits=logits
+            )
 
-        tf.losses.add_loss(tf.reduce_mean(sm_losses))
-        tf.losses.add_loss(tf.reduce_mean(kl))
+            # kl_weight = tf.get_variable('kl_weight',shape=[], dtype=tf.float32)
+            step = tf.cast(tf.train.get_or_create_global_step(), tf.float32)
+            anneal_weight = tf.nn.sigmoid((step / params.anneal_rate) - params.anneal_offset)
+            tf.summary.scalar("anneal_weight", anneal_weight)
+
+            sm_loss = tf.reduce_mean(sm_losses)
+            kl_loss_unscaled = tf.reduce_mean(kl_losses)
+            kl_loss = anneal_weight * kl_loss_unscaled
+
+            tf.losses.add_loss(sm_loss)
+            tf.losses.add_loss(kl_loss)
 
         total_loss = tf.losses.get_total_loss()
 
         if mode == tf.estimator.ModeKeys.TRAIN:
             accuracy = tf.reduce_mean(tf.cast(tf.equal(x, tf.cast(pred, x.dtype)), tf.float32))
             tf.summary.scalar("train_accuracy", accuracy)
+            tf.summary.scalar("train_sm_loss", sm_loss)
+            tf.summary.scalar("train_kl_loss", kl_loss)
+            tf.summary.scalar("train_kl_loss_unscaled", kl_loss_unscaled)
             train_op = slim.learning.create_train_op(
                 total_loss=total_loss,
                 optimizer=tf.train.AdamOptimizer(learning_rate=params.lr))
@@ -72,7 +85,9 @@ def make_model_vae_fn(
                 model_mode=model_mode
             )
             eval_metric_ops = {
-                'val_accuracy': tf.metrics.accuracy(labels=x, predictions=pred)
+                'val_accuracy': tf.metrics.accuracy(labels=x, predictions=pred),
+                'val_sm_loss': tf.metrics.mean(sm_loss),
+                'val_kl_loss': tf.metrics.mean(kl_loss)
             }
             return tf.estimator.EstimatorSpec(
                 mode=mode,

@@ -8,7 +8,7 @@ from .gan.train import discriminator_train_op, generator_train_op
 from .rnd import sample, softplus_rect
 
 
-def make_model_aae_fn(
+def make_model_bigan_fn(
         charset,
         encoder_fn,
         decoder_fn,
@@ -16,7 +16,7 @@ def make_model_aae_fn(
         model_mode='rnn'):
     vocab_size = len(charset)
 
-    def model_aae_fn(features, labels, mode, params):
+    def model_bigan_fn(features, labels, mode, params):
         # Build the generator and discriminator.
         is_training = mode == tf.estimator.ModeKeys.TRAIN
         x = features['x']
@@ -140,4 +140,4 @@ def make_model_aae_fn(
                 eval_metric_ops=eval_metric_ops,
                 evaluation_hooks=[autoencode_cb, generate_cb])
 
-    return model_aae_fn
+    return model_bigan_fn

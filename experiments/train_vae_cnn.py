@@ -28,10 +28,9 @@ def main(argv):
     text_aae.trainer.main(argv, config=config)
 
 
-
 if __name__ == '__main__':
     tf.logging.set_verbosity(tf.logging.INFO)
-    tf.flags.DEFINE_string('model_dir', 'output/vae/cnn/v1', 'Model directory')
+    tf.flags.DEFINE_string('model_dir', 'output/vae/cnn/v9', 'Model directory')
     tf.flags.DEFINE_string('data_dir', 'c:/projects/data/wikitext/wikitext-2', 'Data directory')
     tf.flags.DEFINE_string('schedule', 'train_and_evaluate', 'Schedule')
     tf.flags.DEFINE_integer('batch_size', 32, 'Batch size')

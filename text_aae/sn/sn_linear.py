@@ -1,40 +1,19 @@
 import tensorflow as tf
-from tensorflow.python.framework import common_shapes
-from tensorflow.python.layers.base import Layer
+from tensorflow.python.keras.layers.core import Dense
 
 from .sn_kernel import sn_kernel
 
 
-class SNLinear(Layer):
-    def __init__(self, num_units, **kwargs):
-        self.num_units = num_units
-        super(SNLinear, self).__init__(**kwargs)
-
+class SNLinear(Dense):
     def build(self, input_shape):
         with tf.variable_scope(self.name):
-            print("input_shape: {}".format(input_shape))
             self.kernel = sn_kernel(
-                shape=(input_shape[-1], self.num_units),
+                shape=(input_shape[-1], self.units),
                 scope='kernel'
             )
             self.bias = tf.get_variable(
                 name='bias',
-                shape=[self.num_units],
+                shape=[self.units],
                 initializer=tf.initializers.zeros(dtype=self.dtype)
             )
             self.built = True
-
-    def call(self, inputs, **kwargs):
-        h = inputs
-        rank = common_shapes.rank(inputs)
-        if rank > 2:
-            # Broadcasting is required for the inputs.
-            h = tf.tensordot(h, self.kernel, [[rank - 1], [0]])
-            # Reshape the output back to the original ndim of the input.
-            shape = inputs.get_shape().as_list()
-            output_shape = shape[:-1] + [self.num_units]
-            h.set_shape(output_shape)
-        else:
-            h = tf.matmul(h, self.kernel)
-        h = h + self.bias
-        return h

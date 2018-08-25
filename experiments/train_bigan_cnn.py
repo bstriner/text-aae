@@ -3,7 +3,7 @@ import tensorflow as tf
 import text_aae.trainer
 from text_aae.model_bigan import make_model_bigan_fn
 from text_aae.networks.cnn.decoder import decoder_cnn_fn
-from text_aae.networks.cnn.bidiscriminator import bidiscriminator_cnn_fn
+from text_aae.networks.cnn.discriminator_bigan import discriminator_bigan_cnn_fn
 from text_aae.networks.cnn.encoder import encoder_cnn_fn
 from text_aae.gan.losses import wgan_losses
 from text_aae.text_config import TextConfig
@@ -22,7 +22,7 @@ def main(argv):
             charset=charset,
             encoder_fn=encoder_cnn_fn,
             decoder_fn=decoder_cnn_fn,
-            bidiscriminator_fn=bidiscriminator_cnn_fn,
+            bidiscriminator_fn=discriminator_bigan_cnn_fn,
             gan_loss_fn=wgan_losses,
             model_mode=model_mode
         ),

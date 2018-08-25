@@ -4,15 +4,15 @@ from text_aae.sn.sn_linear import SNLinear
 from ...sn.sn_conv1d import SNConv1D
 
 
-def gan_discriminator_cnn_fn(x, params, is_training=True):
-    dis = GanCnnDiscriminator(params=params)
+def discriminator_gan_cnn_fn(x, params, is_training=True):
+    dis = DiscriminatorGanCnn(params=params)
     return dis.call(x, is_training=is_training)
 
 
-class GanCnnDiscriminator(object):
+class DiscriminatorGanCnn(object):
     def __init__(self, params):
         self.embedding = SNLinear(
-            num_units=params.discriminator_dim,  # params.feature_dim
+            units=params.discriminator_dim,  # params.feature_dim
             name='discriminator_embedding'
         )
         self.layers = [
@@ -21,12 +21,13 @@ class GanCnnDiscriminator(object):
                 kernel_size=7,
                 padding='same',
                 data_format='channels_last',
-                name='discriminator_conv1d_{}'.format(i)
+                name='discriminator_conv1d_{}'.format(i),
+                activation=tf.nn.leaky_relu
             )
             for i in range(6)
         ]
         self.projection = SNLinear(
-            num_units=1,  # params.feature_dim
+            units=1,  # params.feature_dim
             name='discriminator_projection'
         )
 

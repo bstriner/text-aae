@@ -4,30 +4,36 @@ from text_aae.sn.sn_linear import SNLinear
 from ...sn.sn_conv1d import SNConv1D
 
 
-def discriminator_cnn_fn(z, params, is_training=True):
-    dis = CnnDiscriminator(params=params)
-    return dis.call(z, is_training=is_training)
+def discriminator_bigan_cnn_fn(x, z, params, is_training=True):
+    dis = DiscriminatorBiganCnn(params=params)
+    return dis.call(x, z, is_training=is_training)
 
 
-class CnnDiscriminator(object):
+class DiscriminatorBiganCnn(object):
     def __init__(self, params):
+        self.embedding = SNLinear(
+            units=params.discriminator_dim,  # params.feature_dim
+            name='discriminator_projection'
+        )
         self.layers = [
             SNConv1D(
                 filters=params.discriminator_dim,
                 kernel_size=7,
                 padding='same',
                 data_format='channels_last',
-                name='discriminator_conv1d_{}'.format(i)
+                name='discriminator_conv1d_{}'.format(i),
+                activation=tf.nn.leaky_relu
             )
             for i in range(6)
         ]
         self.projection = SNLinear(
-            num_units=1,  # params.feature_dim
+            units=1,  # params.feature_dim
             name='discriminator_projection'
         )
 
-    def call(self, z, is_training=True):
-        h = z
+    def call(self, x, z, is_training=True):
+        xembed = self.embedding(x)
+        h = tf.concat((xembed, z), axis=-1)
         for l in self.layers:
             h = l(h)
         h = tf.reduce_mean(h, axis=1)

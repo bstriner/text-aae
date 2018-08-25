@@ -4,7 +4,7 @@ import text_aae.trainer
 from text_aae.gan.losses import gan_losses
 from text_aae.model_aae import make_model_aae_fn
 from text_aae.networks.cnn.decoder import decoder_cnn_fn
-from text_aae.networks.cnn.discriminator import discriminator_cnn_fn
+from text_aae.networks.cnn.discriminator_aae import discriminator_aae_cnn_fn
 from text_aae.networks.cnn.encoder import encoder_cnn_fn
 from text_aae.text_config import TextConfig
 from text_aae.wikitext_char import make_wikitext_char_input_fn
@@ -22,7 +22,7 @@ def main(argv):
             charset=charset,
             encoder_fn=encoder_cnn_fn,
             decoder_fn=decoder_cnn_fn,
-            discriminator_fn=discriminator_cnn_fn,
+            discriminator_fn=discriminator_aae_cnn_fn,
             gan_loss_fn=gan_losses,
             model_mode=model_mode,
             dis_opt=tf.train.GradientDescentOptimizer(1e-5, name='DOpt'),

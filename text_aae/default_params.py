@@ -56,7 +56,7 @@ def get_hparams(model_dir, create):
 def default_params():
     return HParams(
         generator_steps=1,
-        discriminator_steps=5,
+        discriminator_steps=10,
         gen_lr=1e-5,
         dis_lr=1e-5,
 
@@ -69,7 +69,7 @@ def default_params():
         lr=1e-4,
         momentum=0.1,
         sm_weight=1.,
-        gan_weight=3.,
+        gan_weight=4.,
         anneal_rate=1000,
         anneal_offset=4,
     )

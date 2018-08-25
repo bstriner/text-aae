@@ -13,6 +13,9 @@ def make_model_aae_fn(
         encoder_fn,
         decoder_fn,
         discriminator_fn,
+        gan_loss_fn,
+        dis_opt,
+        gen_opt,
         model_mode='rnn'):
     vocab_size = len(charset)
 
@@ -64,7 +67,7 @@ def make_model_aae_fn(
                     y_fake, h_fake = discriminator_fn(
                         z, params=params, is_training=is_training)
 
-        gloss, dloss = gan_losses(y_real=y_real, y_fake=y_fake, h_real=h_real, h_fake=h_fake)
+        gloss, dloss = gan_loss_fn(y_real=y_real, y_fake=y_fake, h_real=h_real, h_fake=h_fake)
 
         pred = tf.argmax(logits, axis=-1)
         onehot = tf.one_hot(x, axis=-1, depth=vocab_size)
@@ -106,8 +109,8 @@ def make_model_aae_fn(
             tf.summary.scalar("gen_loss_total", gen_loss)
             tf.summary.scalar("dis_loss", dis_loss)
 
-            dis_train_op = discriminator_train_op(params=params, scope=dis_scope, loss=dis_loss)
-            gen_train_op = generator_train_op(params=params, scope=aae_scope, loss=gen_loss)
+            dis_train_op = discriminator_train_op(params=params, scope=dis_scope, loss=dis_loss, opt=dis_opt)
+            gen_train_op = generator_train_op(params=params, scope=aae_scope, loss=gen_loss, opt=gen_opt)
 
             discriminator_hook = RunTrainOpsHook(
                 train_ops=dis_train_op,

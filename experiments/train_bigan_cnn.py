@@ -1,11 +1,11 @@
 import tensorflow as tf
 
 import text_aae.trainer
-from text_aae.gan.losses import gan_losses
-from text_aae.model_aae import make_model_aae_fn
+from text_aae.model_bigan import make_model_bigan_fn
 from text_aae.networks.cnn.decoder import decoder_cnn_fn
-from text_aae.networks.cnn.discriminator import discriminator_cnn_fn
+from text_aae.networks.cnn.bidiscriminator import bidiscriminator_cnn_fn
 from text_aae.networks.cnn.encoder import encoder_cnn_fn
+from text_aae.gan.losses import wgan_losses
 from text_aae.text_config import TextConfig
 from text_aae.wikitext_char import make_wikitext_char_input_fn
 
@@ -18,15 +18,13 @@ def main(argv):
     )
     model_mode = 'cnn'
     config = TextConfig(
-        model_fn=make_model_aae_fn(
+        model_fn=make_model_bigan_fn(
             charset=charset,
             encoder_fn=encoder_cnn_fn,
             decoder_fn=decoder_cnn_fn,
-            discriminator_fn=discriminator_cnn_fn,
-            gan_loss_fn=gan_losses,
-            model_mode=model_mode,
-            dis_opt=tf.train.GradientDescentOptimizer(1e-5, name='DOpt'),
-            gen_opt=tf.train.GradientDescentOptimizer(1e-5, name='GOpt')
+            bidiscriminator_fn=bidiscriminator_cnn_fn,
+            gan_loss_fn=wgan_losses,
+            model_mode=model_mode
         ),
         input_fns=input_fns,
         mode=model_mode
@@ -36,7 +34,7 @@ def main(argv):
 
 if __name__ == '__main__':
     tf.logging.set_verbosity(tf.logging.INFO)
-    tf.flags.DEFINE_string('model_dir', 'output/aae/cnn/v24', 'Model directory')
+    tf.flags.DEFINE_string('model_dir', 'output/bigan/cnn/v2', 'Model directory')
     tf.flags.DEFINE_string('data_dir', 'c:/projects/data/wikitext/wikitext-2', 'Data directory')
     tf.flags.DEFINE_string('schedule', 'train_and_evaluate', 'Schedule')
     tf.flags.DEFINE_integer('batch_size', 32, 'Batch size')

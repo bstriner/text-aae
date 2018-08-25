@@ -26,10 +26,11 @@ class SNConv1D(Conv1D):
                 shape=kernel_shape,
                 scope='kernel'
             )
-            self.bias = self.add_variable(
-                "bias",
+            self.bias = tf.get_variable(
+                name='bias',
                 shape=[self.filters],
-                initializer=tf.initializers.zeros(dtype=self.dtype))
+                initializer=tf.initializers.zeros(dtype=self.dtype)
+            )
             self._convolution_op = Convolution(
                 input_shape,
                 filter_shape=self.kernel.get_shape(),

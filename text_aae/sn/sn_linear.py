@@ -6,9 +6,9 @@ from .sn_kernel import sn_kernel
 
 
 class SNLinear(Layer):
-    def __init__(self, num_units, name=None):
+    def __init__(self, num_units, **kwargs):
         self.num_units = num_units
-        super(SNLinear, self).__init__(name=name)
+        super(SNLinear, self).__init__(**kwargs)
 
     def build(self, input_shape):
         with tf.variable_scope(self.name):
@@ -17,10 +17,11 @@ class SNLinear(Layer):
                 shape=(input_shape[-1], self.num_units),
                 scope='kernel'
             )
-            self.bias = self.add_variable(
-                "bias",
+            self.bias = tf.get_variable(
+                name='bias',
                 shape=[self.num_units],
-                initializer=tf.initializers.zeros(dtype=self.dtype))
+                initializer=tf.initializers.zeros(dtype=self.dtype)
+            )
             self.built = True
 
     def call(self, inputs, **kwargs):

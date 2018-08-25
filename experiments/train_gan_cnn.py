@@ -23,8 +23,8 @@ def main(argv):
             gan_discriminator_fn=gan_discriminator_cnn_fn,
             gan_loss_fn=wgan_losses,
             model_mode=model_mode,
-            dis_opt=tf.train.GradientDescentOptimizer(1e-5, name='dis_opt'),
-            gen_opt=tf.train.GradientDescentOptimizer(1e-5, name='gen_opt')
+            dis_opt=tf.train.AdamOptimizer(1e-5, name='dis_opt'),
+            gen_opt=tf.train.AdamOptimizer(1e-5, name='gen_opt')
         ),
         input_fns=input_fns,
         mode=model_mode
@@ -34,7 +34,7 @@ def main(argv):
 
 if __name__ == '__main__':
     tf.logging.set_verbosity(tf.logging.INFO)
-    tf.flags.DEFINE_string('model_dir', 'output/gan/cnn/v9', 'Model directory')
+    tf.flags.DEFINE_string('model_dir', 'output/gan/cnn/v17', 'Model directory')
     tf.flags.DEFINE_string('data_dir', 'c:/projects/data/wikitext/wikitext-2', 'Data directory')
     tf.flags.DEFINE_string('schedule', 'train_and_evaluate', 'Schedule')
     tf.flags.DEFINE_integer('batch_size', 32, 'Batch size')

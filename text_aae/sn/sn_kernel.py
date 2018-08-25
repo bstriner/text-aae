@@ -33,7 +33,11 @@ def sn_calc(w):
     uup = tf.assign(u, ut, name='update_u')
     tf.add_to_collection(tf.GraphKeys.UPDATE_OPS, uup)
     sn = spec_norm(uup, w)
-    sn = tf.maximum(sn, 1.)
+    if len(shape)>2:
+        scale = np.sqrt(np.prod(shape[:-2]))
+    else:
+        scale = 1.
+    sn = tf.maximum(sn*scale, 1.)
     return sn
 
 
@@ -48,7 +52,13 @@ def sn_kernel(shape, scope, init=tf.initializers.glorot_normal()):
             with tf.name_scope(vs.name + "/"):
                 w = tf.get_variable(name='kernel_raw', shape=shape, initializer=init, dtype=tf.float32)
                 sn = sn_calc(w)
-                kernel = tf.div(w, sn, name='kernel_sn')
+                if len(shape)>2:
+                    #scale = tf.reduce_prod(tf.cast(tf.shape(w)[:-2], tf.float32))
+                    #scale = tf.sqrt(tf.reduce_prod(tf.cast(tf.shape(w)[:-2], tf.float32)))
+                    scale = 1.
+                else:
+                    scale = 1.
+                kernel = tf.div(w, sn*scale, name='kernel_sn')
                 s, u, v = tf.linalg.svd(tf.reshape(kernel, (-1, tf.shape(kernel)[-1])))
                 tf.summary.scalar(vs.name + "/max_sv", tf.reduce_max(tf.abs(s)))
                 print("New kernel: {}".format(kernel_name))

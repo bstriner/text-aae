@@ -32,7 +32,7 @@ def make_model_gan_fn(
         l = x.shape[1-batch_dim].value
         with tf.variable_scope("Generator") as aae_scope:
             with tf.variable_scope("Decoder"):
-                z_prior = tf.random_normal(shape=(n, l, params.latent_dim))
+                z_prior = tf.random_normal(shape=(n, l, params.latent_dim), name='z_prior')
                 logits = decoder_fn(
                     z_prior,
                     vocab_size=vocab_size,

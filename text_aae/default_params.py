@@ -56,7 +56,7 @@ def get_hparams(model_dir, create):
 def default_params():
     return HParams(
         generator_steps=1,
-        discriminator_steps=5,
+        discriminator_steps=10,
         gen_lr=1e-5,
         dis_lr=1e-5,
 

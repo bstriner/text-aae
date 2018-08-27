@@ -4,7 +4,7 @@ from tensorflow.contrib import slim
 from ..embedding import embedding_fn
 
 
-def make_encoder_cnn_fn(bn=True):
+def make_encoder_cnn_fn(bn=True, kernel_size=7, layers=6, padding='SAME'):
     def encoder_cnn_fn(x, vocab_size, params, is_training=True):
         h = x
         h = embedding_fn(
@@ -12,12 +12,13 @@ def make_encoder_cnn_fn(bn=True):
             vocab_size=vocab_size,
             dim_out=params.encoder_dim,
             name='encoder_embedding')
-        for i in range(6):
+        for i in range(layers):
             h = slim.conv1d(
                 h,
                 num_outputs=params.encoder_dim,
-                kernel_size=7,
+                kernel_size=kernel_size,
                 activation_fn=tf.nn.leaky_relu,
+                padding=padding,
                 scope='encoder_conv1d_{}'.format(i))
             if bn:
                 h = slim.batch_norm(h, is_training=is_training, scope='encoder_bn_{}'.format(i))

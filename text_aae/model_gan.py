@@ -1,11 +1,9 @@
 import tensorflow as tf
 from tensorflow.contrib.gan.python.train import RunTrainOpsHook
 
-from .callbacks.autoencode import AutoencodeCallback
 from .callbacks.generate import GenerateCallback
 from .gan.train import discriminator_train_op, generator_train_op
 from .gumbel import gumbel_softmax
-from .rnd import sample, softplus_rect
 
 
 def make_model_gan_fn(
@@ -15,7 +13,9 @@ def make_model_gan_fn(
         gan_loss_fn,
         gen_opt,
         dis_opt,
-        model_mode='rnn'):
+        padding_size=0,
+        model_mode='rnn',
+        combined=True):
     vocab_size = len(charset)
 
     def model_gan_fn(features, labels, mode, params):
@@ -25,14 +25,16 @@ def make_model_gan_fn(
         if model_mode == 'rnn':
             x = tf.transpose(x, (1, 0))
             batch_dim = 1
+            time_dim = 0
         else:
             batch_dim = 0
+            time_dim = 1
 
         n = x.shape[batch_dim].value
-        l = x.shape[1-batch_dim].value
+        l = x.shape[1 - batch_dim].value
         with tf.variable_scope("Generator") as aae_scope:
             with tf.variable_scope("Decoder"):
-                z_prior = tf.random_normal(shape=(n, l, params.latent_dim), name='z_prior')
+                z_prior = tf.random_normal(shape=(n, l+padding_size, params.latent_dim), name='z_prior')
                 logits = decoder_fn(
                     z_prior,
                     vocab_size=vocab_size,
@@ -45,19 +47,33 @@ def make_model_gan_fn(
                     axis=-1
                 )
 
-        with tf.variable_scope('Discriminator') as dis_scope:
-            onehot_x = tf.one_hot(x, depth=vocab_size, axis=-1)
-            with tf.name_scope('Discriminator/Real/'):
-                y_real, h_real = gan_discriminator_fn(
-                    x=onehot_x,
+        onehot_x = tf.one_hot(x, depth=vocab_size, axis=-1)
+        if combined:
+            with tf.variable_scope('Discriminator') as dis_scope:
+                x_all = tf.concat((onehot_x, x_model), axis=batch_dim)
+                y_all, h_all = gan_discriminator_fn(
+                    x=x_all,
                     params=params,
                     is_training=is_training)
-        with tf.variable_scope(dis_scope, reuse=True):
-            with tf.name_scope('Discriminator/Fake/'):
-                y_fake, h_fake = gan_discriminator_fn(
-                    x=x_model,
-                    params=params,
-                    is_training=is_training)
+                if model_mode == 'rnn':
+                    y_real, y_fake = y_all[:, :n], y_all[:, n:]
+                    h_real, h_fake = h_all[:, :n], h_all[:, n:]
+                else:
+                    y_real, y_fake = y_all[:n], y_all[n:]
+                    h_real, h_fake = h_all[:n], h_all[n:]
+        else:
+            with tf.variable_scope('Discriminator') as dis_scope:
+                with tf.name_scope('Discriminator/Real/'):
+                    y_real, h_real = gan_discriminator_fn(
+                        x=onehot_x,
+                        params=params,
+                        is_training=is_training)
+            with tf.variable_scope(dis_scope, reuse=True):
+                with tf.name_scope('Discriminator/Fake/'):
+                    y_fake, h_fake = gan_discriminator_fn(
+                        x=x_model,
+                        params=params,
+                        is_training=is_training)
 
         gloss, dloss = gan_loss_fn(y_real=y_real, y_fake=y_fake, h_real=h_real, h_fake=h_fake)
 

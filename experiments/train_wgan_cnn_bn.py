@@ -7,6 +7,7 @@ from text_aae.networks.cnn.decoder import make_decoder_cnn_fn
 from text_aae.networks.cnn.discriminator_gan import make_discriminator_gan_cnn_fn
 from text_aae.text_config import TextConfig
 from text_aae.wikitext_char import make_wikitext_char_input_fn
+from text_aae.sn.batch_norm import make_batch_norm
 
 
 def main(argv):
@@ -25,6 +26,7 @@ def main(argv):
                 kernel_size=5,
                 padding='valid'),
             gan_discriminator_fn=make_discriminator_gan_cnn_fn(
+                bn=make_batch_norm(),
                 layers=9,
                 kernel_size=5,
                 padding='valid'),
@@ -43,7 +45,7 @@ def main(argv):
 
 if __name__ == '__main__':
     tf.logging.set_verbosity(tf.logging.INFO)
-    tf.flags.DEFINE_string('model_dir', 'output/wgan/cnn/v3-adam', 'Model directory')
+    tf.flags.DEFINE_string('model_dir', 'output/wgan/cnn-bn/v1-adam', 'Model directory')
     tf.flags.DEFINE_string('data_dir', 'c:/projects/data/wikitext/wikitext-2', 'Data directory')
     tf.flags.DEFINE_string('schedule', 'train_and_evaluate', 'Schedule')
     tf.flags.DEFINE_integer('batch_size', 64, 'Batch size')

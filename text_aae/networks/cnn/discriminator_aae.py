@@ -1,16 +1,20 @@
 import tensorflow as tf
+from tensorflow.contrib import slim
 
 from text_aae.sn.sn_linear import SNLinear
 from ...sn.sn_conv1d import SNConv1D
 
 
-def discriminator_aae_cnn_fn(z, params, is_training=True):
-    dis = DiscriminatorAaeCnn(params=params)
-    return dis.call(z, is_training=is_training)
+def make_discriminator_aae_cnn_fn(bn=True):
+    def discriminator_aae_cnn_fn(z, params, is_training=True):
+        dis = DiscriminatorAaeCnn(params=params, bn=bn)
+        return dis.call(z, is_training=is_training)
+
+    return discriminator_aae_cnn_fn
 
 
 class DiscriminatorAaeCnn(object):
-    def __init__(self, params):
+    def __init__(self, params, bn=True):
         self.layers = [
             SNConv1D(
                 filters=params.discriminator_dim,
@@ -26,11 +30,14 @@ class DiscriminatorAaeCnn(object):
             units=1,  # params.feature_dim
             name='discriminator_projection'
         )
+        self.bn = bn
 
     def call(self, z, is_training=True):
         h = z
         for l in self.layers:
             h = l(h)
+            if self.bn:
+                h = slim.batch_norm(h, is_training=is_training)
         h = tf.reduce_mean(h, axis=1)
         y = self.projection(h)
         return y, h

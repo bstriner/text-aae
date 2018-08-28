@@ -4,7 +4,7 @@ from text_aae.sn.sn_linear import SNLinear
 from ...sn.sn_conv1d import SNConv1D
 
 
-def make_discriminator_gan_cnn_fn(bn=False, kernel_size=7, layers=6, padding='same'):
+def make_discriminator_gan_cnn_fn(bn=None, kernel_size=7, layers=6, padding='same'):
     def discriminator_gan_cnn_fn(x, params, is_training=True):
         dis = DiscriminatorGanCnn(params=params, bn=bn, padding=padding, kernel_size=kernel_size, layers=layers)
         return dis.call(x, is_training=is_training)

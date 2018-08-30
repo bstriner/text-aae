@@ -55,12 +55,15 @@ def make_model_gan_fn(
                     x=x_all,
                     params=params,
                     is_training=is_training)
+                h_real, h_fake = None, None
                 if model_mode == 'rnn':
                     y_real, y_fake = y_all[:, :n], y_all[:, n:]
-                    h_real, h_fake = h_all[:, :n], h_all[:, n:]
+                    if h_all is not None:
+                        h_real, h_fake = h_all[:, :n], h_all[:, n:]
                 else:
                     y_real, y_fake = y_all[:n], y_all[n:]
-                    h_real, h_fake = h_all[:n], h_all[n:]
+                    if h_all is not None:
+                        h_real, h_fake = h_all[:n], h_all[n:]
         else:
             with tf.variable_scope('Discriminator') as dis_scope:
                 with tf.name_scope('Discriminator/Real/'):

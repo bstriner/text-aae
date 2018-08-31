@@ -3,6 +3,13 @@ from tensorflow.python.keras.layers.core import Dense
 
 from .sn_kernel import sn_kernel
 
+#def sn_linear_wrapper(inputs, units, **kwargs):
+
+
+def sn_linear(inputs, **kwargs):
+    layer = SNLinear(**kwargs)
+    return layer(inputs)
+
 
 class SNLinear(Dense):
     def build(self, input_shape):

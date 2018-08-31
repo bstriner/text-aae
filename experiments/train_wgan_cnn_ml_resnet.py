@@ -3,9 +3,8 @@ import tensorflow as tf
 import text_aae.trainer
 from text_aae.gan.losses import wgan_losses
 from text_aae.model_gan import make_model_gan_fn
-from text_aae.networks.cnn.decoder import make_decoder_cnn_fn
-from text_aae.networks.cnn.discriminator_gan_ml import make_discriminator_gan_cnn_ml_fn
-from text_aae.sn.batch_norm import make_batch_norm
+from text_aae.networks.cnn.decoder_resnet import make_decoder_resnet_cnn_fn
+from text_aae.networks.cnn.discriminator_gan_ml_resnet import make_discriminator_gan_cnn_ml_resnet_fn
 from text_aae.text_config import TextConfig
 from text_aae.wikitext_char import make_wikitext_char_input_fn
 
@@ -16,30 +15,31 @@ def main(argv):
         batch_length=tf.flags.FLAGS.batch_length,
         batch_size=tf.flags.FLAGS.batch_size
     )
-    layers = 12
+    layers = 6
     kernel_size = 5
     model_mode = 'cnn'
     config = TextConfig(
         model_fn=make_model_gan_fn(
             charset=charset,
-            decoder_fn=make_decoder_cnn_fn(
+            decoder_fn=make_decoder_resnet_cnn_fn(
                 bn=True,
                 layers=layers,
                 kernel_size=kernel_size,
+                activation_fn=tf.nn.leaky_relu,
                 padding='valid'),
-            gan_discriminator_fn=make_discriminator_gan_cnn_ml_fn(
-                bn=make_batch_norm(eps=1e-6, clip_var=1.),
-                layers=12,
+            gan_discriminator_fn=make_discriminator_gan_cnn_ml_resnet_fn(
+                layers=6,
                 kernel_size=5,
                 padding='valid',
-                emedding_scale=10
+                emedding_scale=5,
+                activation_fn=tf.nn.leaky_relu
             ),
             gan_loss_fn=wgan_losses,
             model_mode=model_mode,
             dis_opt=tf.train.AdamOptimizer(1e-5, name='dis_opt'),
             gen_opt=tf.train.AdamOptimizer(1e-5, name='gen_opt'),
             combined=True,
-            padding_size=layers * (kernel_size - 1)
+            padding_size=layers * (kernel_size - 1) * 2
         ),
         input_fns=input_fns,
         mode=model_mode
@@ -49,7 +49,7 @@ def main(argv):
 
 if __name__ == '__main__':
     tf.logging.set_verbosity(tf.logging.INFO)
-    tf.flags.DEFINE_string('model_dir', 'output/wgan/cnn-ml/bn/v20-12layer-adam-clip', 'Model directory')
+    tf.flags.DEFINE_string('model_dir', 'output/wgan/cnn-ml/resnet/v1-adam', 'Model directory')
     tf.flags.DEFINE_string('data_dir', 'c:/projects/data/wikitext/wikitext-2', 'Data directory')
     tf.flags.DEFINE_string('schedule', 'train_and_evaluate', 'Schedule')
     tf.flags.DEFINE_integer('batch_size', 16, 'Batch size')

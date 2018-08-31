@@ -12,8 +12,9 @@ def activation_0norm(x):
 
 
 def make_batch_norm(alpha_rate=0.01, beta_rate=0.01, eps=1e-1, stop_grad=False, reg_weight=0.,
+                    clip_var=True,
                     enable_alpha=True, enable_beta=True, beta_activation=activation_0norm):
-    def batch_norm(x, scope, is_training=True):
+    def batch_norm(x, scope, is_training=True, data_format='NHWC'):
         with tf.variable_scope(scope):
             dim = x.shape[-1].value
             running_mean = tf.get_variable(
@@ -46,13 +47,13 @@ def make_batch_norm(alpha_rate=0.01, beta_rate=0.01, eps=1e-1, stop_grad=False, 
                 actual_var = tf.stop_gradient(actual_var)
             if is_training:
                 denom = tf.sqrt(actual_var + eps)
-                # if clip > 0:
-                #    denom = tf.maximum(denom, clip)
+                if clip_var > 0:
+                    denom = tf.maximum(denom, clip_var)
                 x = (x - actual_mean) / denom
             else:
                 denom = tf.sqrt(running_var + eps)
-                # if clip > 0:
-                #    denom = tf.maximum(denom, clip)
+                if clip_var > 0:
+                    denom = tf.maximum(denom, clip_var)
                 x = (x - running_mean) / denom
             if enable_beta:
                 beta = tf.get_variable(

@@ -4,9 +4,20 @@ from text_aae.sn.sn_linear import SNLinear
 from ...sn.sn_conv1d import SNConv1D
 
 
-def make_discriminator_gan_cnn_ml_fn(bn=None, kernel_size=7, layers=6, padding='same'):
+def make_discriminator_gan_cnn_ml_fn(
+        bn=None,
+        padding='same',
+        kernel_size=7,
+        layers=6,
+        emedding_scale=1.):
     def discriminator_gan_cnn_fn(x, params, is_training=True):
-        dis = DiscriminatorGanCnnMl(params=params, bn=bn, padding=padding, kernel_size=kernel_size, layers=layers)
+        dis = DiscriminatorGanCnnMl(
+            params=params,
+            bn=bn,
+            padding=padding,
+            kernel_size=kernel_size,
+            layers=layers,
+            emedding_scale=emedding_scale)
         return dis.call(x, is_training=is_training)
 
     return discriminator_gan_cnn_fn
@@ -17,12 +28,13 @@ class Projection(object):
         self.layers = [
             SNLinear(
                 units=params.discriminator_dim,
-                name='projection_0',
+                name='{}_projection_0'.format(name),
                 activation=tf.nn.leaky_relu
             ),
             SNLinear(
                 units=1,  # params.feature_dim
-                name='projection_1'
+                name='{}_projection_1'.format(name),
+                activation=None
             )]
         self.name = name
         self.bn = bn
@@ -32,14 +44,14 @@ class Projection(object):
             h = x
             h = self.layers[0](h)
             if self.bn is not None:
-                h = self.bn(h, is_training=is_training, scope='batch_norm')
+                h = self.bn(h, is_training=is_training, scope='{}_batch_norm'.format(self.name))
             h = self.layers[1](h)
             h = tf.reduce_mean(h, axis=1)
             return h
 
 
 class DiscriminatorGanCnnMl(object):
-    def __init__(self, params, bn=None, kernel_size=7, layers=6, padding='same'):
+    def __init__(self, params, bn=None, kernel_size=7, layers=6, padding='same', emedding_scale=1.):
         self.embedding = SNLinear(
             units=params.discriminator_dim,  # params.feature_dim
             name='discriminator_embedding'
@@ -63,9 +75,11 @@ class DiscriminatorGanCnnMl(object):
             for i in range(layers + 1)]
         self.bn = bn
 
+        self.emedding_scale = emedding_scale
+
     def call(self, x, is_training=True):
         h = x
-        h = self.embedding(h)
+        h = self.embedding(h) * self.emedding_scale
         projections = []
         for i, l in enumerate(self.layers):
             projection = self.projections[i].call(h, is_training=is_training)
@@ -78,4 +92,4 @@ class DiscriminatorGanCnnMl(object):
 
         total = tf.add_n(projections)
 
-        return total, None
+        return total, h

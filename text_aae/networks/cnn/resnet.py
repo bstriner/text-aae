@@ -10,7 +10,9 @@ def building_block_v2(inputs, filters, training, projection_shortcut, strides,
                       activation_fn=tf.nn.relu,
                       kernel_size=3,
                       conv_fn=slim.conv1d,
-                      bn_fn=slim.batch_norm):
+                      bn_fn=slim.batch_norm,
+                      shortcut_weight=1.,
+                      delta_weight=1.):
     """A single block for ResNet v2, without a bottleneck.
     Batch normalization then ReLu then convolution as described by:
       Identity Mappings in Deep Residual Networks
@@ -63,7 +65,7 @@ def building_block_v2(inputs, filters, training, projection_shortcut, strides,
         inputs=inputs, num_outputs=filters, kernel_size=kernel_size, stride=1,
         data_format=data_format, scope='resnet_conv1d_1', activation_fn=None, padding=padding)
 
-    return inputs + shortcut
+    return (inputs*delta_weight) + (shortcut*shortcut_weight)
 
 
 def bottleneck_block_v2(inputs, filters, training, projection_shortcut,
@@ -104,19 +106,19 @@ def bottleneck_block_v2(inputs, filters, training, projection_shortcut,
         shortcut = projection_shortcut(inputs)
 
     inputs = slim.conv1d(
-        inputs=inputs, filters=filters, kernel_size=1, strides=1,
+        inputs=inputs, filters=filters//4, kernel_size=1, strides=1,
         data_format=data_format, scope='resnet_conv1d_0', activation_fn=None)
 
     inputs = slim.batch_norm(inputs, is_training=training, data_format=data_format, scope='resnet_bn_1')
     inputs = activation(inputs)
     inputs = slim.conv1d(
-        inputs=inputs, filters=filters, kernel_size=kernel_size, strides=strides,
+        inputs=inputs, filters=filters//4, kernel_size=kernel_size, strides=strides,
         data_format=data_format, scope='resnet_conv1d_1', activation_fn=None)
 
     inputs = slim.batch_norm(inputs, is_training=training, data_format=data_format, scope='resnet_bn_2')
     inputs = activation(inputs)
     inputs = slim.conv1d(
-        inputs=inputs, filters=4 * filters, kernel_size=1, strides=1,
+        inputs=inputs, filters=filters, kernel_size=1, strides=1,
         data_format=data_format, scope='resnet_conv1d_2', activation_fn=None)
 
     return inputs + shortcut

@@ -24,6 +24,10 @@ def build_projection(inputs, params, activation_fn=tf.nn.relu, bn_fn=None, is_tr
     return h
 
 
+def norm(x):
+    return x / tf.maximum(tf.norm(x, ord=2, axis=-1, keep_dims=True), 1)
+
+
 def make_discriminator_gan_cnn_ml_resnet_fn(
         bn_fn=None,
         padding='same',
@@ -39,6 +43,7 @@ def make_discriminator_gan_cnn_ml_resnet_fn(
             activation=None,
             name='discriminator_input'
         ) * emedding_scale
+        # h = norm(h)
         projections = []
         for i in range(layers):
             with tf.variable_scope('discriminator_projection_{}'.format(i)):
@@ -60,8 +65,10 @@ def make_discriminator_gan_cnn_ml_resnet_fn(
                     padding=padding,
                     training=is_training,
                     strides=1,
-                    projection_shortcut=None
-                )
+                    delta_weight=0.2,
+                    shortcut_weight=1,
+                    projection_shortcut=None)
+                # h = norm(h)
         with tf.variable_scope('discriminator_projection_final'):
             projections.append(build_projection(
                 inputs=h,

@@ -5,7 +5,8 @@ from ...sn.sn_conv1d import SNConv1D
 
 
 def make_discriminator_gan_cnn_ml_fn(
-        bn=None,
+        bn_fn=None,
+        activation_fn=tf.nn.leaky_relu,
         padding='same',
         kernel_size=7,
         layers=6,
@@ -13,8 +14,9 @@ def make_discriminator_gan_cnn_ml_fn(
     def discriminator_gan_cnn_fn(x, params, is_training=True):
         dis = DiscriminatorGanCnnMl(
             params=params,
-            bn=bn,
+            bn=bn_fn,
             padding=padding,
+        activation_fn=activation_fn,
             kernel_size=kernel_size,
             layers=layers,
             emedding_scale=emedding_scale)
@@ -24,12 +26,12 @@ def make_discriminator_gan_cnn_ml_fn(
 
 
 class Projection(object):
-    def __init__(self, params, name, bn=None):
+    def __init__(self, params, name, bn=None, activation_fn=tf.nn.leaky_relu):
         self.layers = [
             SNLinear(
                 units=params.discriminator_dim,
                 name='{}_projection_0'.format(name),
-                activation=tf.nn.leaky_relu
+                activation=activation_fn
             ),
             SNLinear(
                 units=1,  # params.feature_dim
@@ -51,7 +53,9 @@ class Projection(object):
 
 
 class DiscriminatorGanCnnMl(object):
-    def __init__(self, params, bn=None, kernel_size=7, layers=6, padding='same', emedding_scale=1.):
+    def __init__(self, params, bn=None, kernel_size=7, layers=6, padding='same',
+                 activation_fn=tf.nn.leaky_relu,
+                 emedding_scale=1.):
         self.embedding = SNLinear(
             units=params.discriminator_dim,  # params.feature_dim
             name='discriminator_embedding'
@@ -63,7 +67,7 @@ class DiscriminatorGanCnnMl(object):
                 padding=padding,
                 data_format='channels_last',
                 name='discriminator_conv1d_{}'.format(i),
-                activation=tf.nn.leaky_relu
+                activation=activation_fn
             )
             for i in range(layers)
         ]
@@ -71,9 +75,11 @@ class DiscriminatorGanCnnMl(object):
             Projection(
                 params=params,
                 name='projection_{}'.format(i),
+                activation_fn=activation_fn,
                 bn=bn)
             for i in range(layers + 1)]
         self.bn = bn
+        self.activation_fn=activation_fn
 
         self.emedding_scale = emedding_scale
 

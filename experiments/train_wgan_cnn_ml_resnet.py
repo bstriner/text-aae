@@ -15,8 +15,8 @@ def main(argv):
         batch_length=tf.flags.FLAGS.batch_length,
         batch_size=tf.flags.FLAGS.batch_size
     )
-    layers = 6
-    kernel_size = 5
+    layers = 8
+    kernel_size = 3
     model_mode = 'cnn'
     config = TextConfig(
         model_fn=make_model_gan_fn(
@@ -28,10 +28,10 @@ def main(argv):
                 activation_fn=tf.nn.leaky_relu,
                 padding='valid'),
             gan_discriminator_fn=make_discriminator_gan_cnn_ml_resnet_fn(
-                layers=6,
+                layers=8,
                 kernel_size=5,
                 padding='valid',
-                emedding_scale=5,
+                emedding_scale=10,
                 activation_fn=tf.nn.leaky_relu
             ),
             gan_loss_fn=wgan_losses,
@@ -49,10 +49,10 @@ def main(argv):
 
 if __name__ == '__main__':
     tf.logging.set_verbosity(tf.logging.INFO)
-    tf.flags.DEFINE_string('model_dir', 'output/wgan/cnn-ml/resnet/v1-adam', 'Model directory')
+    tf.flags.DEFINE_string('model_dir', 'output/wgan/cnn-ml/resnet/v2-adam', 'Model directory')
     tf.flags.DEFINE_string('data_dir', 'c:/projects/data/wikitext/wikitext-2', 'Data directory')
     tf.flags.DEFINE_string('schedule', 'train_and_evaluate', 'Schedule')
-    tf.flags.DEFINE_integer('batch_size', 16, 'Batch size')
+    tf.flags.DEFINE_integer('batch_size', 32, 'Batch size')
     tf.flags.DEFINE_integer('batch_length', 100, 'Batch length')
     tf.flags.DEFINE_integer('capacity', 4000, 'capacity')
     tf.flags.DEFINE_integer('min_after_dequeue', 2000, 'min_after_dequeue')

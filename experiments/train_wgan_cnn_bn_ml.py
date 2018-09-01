@@ -16,7 +16,7 @@ def main(argv):
         batch_length=tf.flags.FLAGS.batch_length,
         batch_size=tf.flags.FLAGS.batch_size
     )
-    layers = 12
+    layers = 8
     kernel_size = 5
     model_mode = 'cnn'
     config = TextConfig(
@@ -28,8 +28,8 @@ def main(argv):
                 kernel_size=kernel_size,
                 padding='valid'),
             gan_discriminator_fn=make_discriminator_gan_cnn_ml_fn(
-                bn=make_batch_norm(eps=1e-6, clip_var=1.),
-                layers=12,
+                bn_fn=make_batch_norm(eps=1e-6, clip_var=1.),
+                layers=8,
                 kernel_size=5,
                 padding='valid',
                 emedding_scale=10
@@ -49,7 +49,7 @@ def main(argv):
 
 if __name__ == '__main__':
     tf.logging.set_verbosity(tf.logging.INFO)
-    tf.flags.DEFINE_string('model_dir', 'output/wgan/cnn-ml/bn/v20-12layer-adam-clip', 'Model directory')
+    tf.flags.DEFINE_string('model_dir', 'output/wgan/cnn-ml/bn/v21-8layer-adam-clip', 'Model directory')
     tf.flags.DEFINE_string('data_dir', 'c:/projects/data/wikitext/wikitext-2', 'Data directory')
     tf.flags.DEFINE_string('schedule', 'train_and_evaluate', 'Schedule')
     tf.flags.DEFINE_integer('batch_size', 16, 'Batch size')

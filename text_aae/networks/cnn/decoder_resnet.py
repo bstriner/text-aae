@@ -1,10 +1,16 @@
 import tensorflow as tf
 from tensorflow.contrib import slim
 
-from .resnet import building_block_v2
+from .resnet import building_block_v2, bottleneck_block_v2
 
 
-def make_decoder_resnet_cnn_fn(bn=True, kernel_size=7, layers=6, padding='SAME', activation_fn=tf.nn.relu):
+def make_decoder_resnet_cnn_fn(bn=True, kernel_size=7, layers=6, padding='SAME',
+                               bottleneck=False,
+                               activation_fn=tf.nn.relu):
+    if bottleneck:
+        block_fn = bottleneck_block_v2
+    else:
+        block_fn = building_block_v2
     def decoder_cnn_fn(z, vocab_size, params, is_training=True):
         h = z
         h = slim.fully_connected(
@@ -14,7 +20,7 @@ def make_decoder_resnet_cnn_fn(bn=True, kernel_size=7, layers=6, padding='SAME',
         )
         for i in range(layers):
             with tf.variable_scope('decoder_resnet_{}'.format(i)):
-                h = building_block_v2(
+                h = block_fn(
                     inputs=h,
                     filters=params.decoder_dim,
                     kernel_size=kernel_size,
